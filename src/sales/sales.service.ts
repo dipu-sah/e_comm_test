@@ -4,13 +4,14 @@ import { UpdateSaleDto } from './dto/update-sale.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Sale } from './entities/sale.entity';
+import { TopSales } from './dto/top-sale.dto';
 
 @Injectable()
 export class SalesService {
   constructor(
     @InjectModel(Sale.name) private readonly salesModel: Model<Sale>,
   ) {}
-  async create(createSaleDto: CreateSaleDto) {
+  async create(saleDto: TopSales) {
     const data = await this.salesModel
       .aggregate([
         {
@@ -37,15 +38,15 @@ export class SalesService {
         },
         {
           $match: {
-            // productId: {
-            //   $ne: null,
-            // },
-            // _id: {
-            //   $ne: null,
-            // },
+            productId: {
+              $ne: null,
+            },
+            _id: {
+              $ne: null,
+            },
             orderDate: {
-              $lte: new Date('25 april 2023'),
-              $gt: new Date('25 march 2021'),
+              $lte: saleDto.endDate,
+              $gt: saleDto.startDate,
             },
           },
         },
@@ -70,7 +71,7 @@ export class SalesService {
           },
         },
         {
-          $limit: 10,
+          $limit: saleDto.count,
         },
       ])
       .exec();
